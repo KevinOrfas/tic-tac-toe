@@ -27,6 +27,19 @@ export function createServer(): http.Server {
       return;
     }
 
+    if (req.method === 'POST' && req.url === '/api/v1/games') {
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(
+        JSON.stringify({
+          id: '1',
+          gameName: 'Test Game',
+          winner: '',
+          timeSpent: '',
+        })
+      );
+      return;
+    }
+
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Not found' }));
   });

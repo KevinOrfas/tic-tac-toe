@@ -60,6 +60,23 @@ describe('HTTP Server', () => {
     }
   });
 
+  describe('POST /api/v1/games', () => {
+    it('should create a new game with valid data', async () => {
+      const response = await fetch(`${baseUrl}/api/v1/games`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameName: 'Test Game' }),
+      });
+
+      expect(response.status).toBe(201);
+      const data = await response.json();
+      expect(data).toHaveProperty('id');
+      expect(data).toHaveProperty('gameName', 'Test Game');
+      expect(data).toHaveProperty('winner', '');
+      expect(data).toHaveProperty('timeSpent', '');
+    });
+  });
+
   describe('CORS', () => {
     it('should include CORS headers on GET requests', async () => {
       const response = await fetch(`${baseUrl}/api/v1/games`);
