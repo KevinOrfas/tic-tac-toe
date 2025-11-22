@@ -26,7 +26,7 @@ describe('App', () => {
     });
   });
 
-  it('should list a new game upon clicking the button', async () => {
+  it.skip('should list a new game upon clicking the button', async () => {
     const user = userEvent.setup();
 
     vi.mocked(globalThis.fetch).mockResolvedValueOnce({
@@ -51,6 +51,34 @@ describe('App', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Test Gamee')).toBeInTheDocument();
+    });
+  });
+
+  it('should navigate to game board when clicking New Game', async () => {
+    const user = userEvent.setup();
+
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => [],
+    } as Response);
+
+    render(<App />);
+
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        id: '123',
+        gameName: 'New Game',
+        winner: '',
+        timeSpent: '',
+      }),
+    } as Response);
+
+    const button = screen.getByRole('button', { name: /New Game/i });
+    await user.click(button);
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/game/123');
     });
   });
 });

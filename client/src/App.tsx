@@ -1,11 +1,14 @@
 import './App.css';
 import { GamesList, type ResponseShape } from './components/GamesList.tsx';
 import { useEffect, useState } from 'react';
+import { Route, useLocation } from 'wouter';
 
-function App() {
+function HomePage() {
+  const [, setLocation] = useLocation();
   const [games, setGames] = useState<ResponseShape[]>([
     { id: '', winner: '', gameName: '', timeSpent: '' },
   ]);
+
   const createGame = async () => {
     try {
       const response = await fetch('http://localhost:3000/api/v1/games', {
@@ -22,18 +25,22 @@ function App() {
       console.error('Fetch error:', error);
     }
   };
+
   const startGame = async () => {
     const game = await createGame();
     if (game) {
       setGames([...games, game]);
+      setLocation(`/game/${game.id}`);
     }
   };
+
   const getGames = async () => {
     const response = await fetch('http://localhost:3000/api/v1/games');
     if (response.ok) {
       return await response.json();
     }
   };
+
   useEffect(() => {
     const fetchGames = async () => {
       const games = await getGames();
@@ -51,6 +58,26 @@ function App() {
         New Game
       </button>
       <GamesList gamesResult={games} />
+    </>
+  );
+}
+
+function GameBoard({ params }: { params: { id: string } }) {
+  return (
+    <div>
+      <h1>Game Board</h1>
+      <p>Game ID: {params.id}</p>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <>
+      <Route path="/" component={HomePage} />
+      <Route path="/game/:id">
+        {(params) => <GameBoard params={params} />}
+      </Route>
     </>
   );
 }
