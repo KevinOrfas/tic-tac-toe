@@ -12,8 +12,8 @@ interface GamesListProps {
 export const GamesList = ({ gamesResult }: GamesListProps) => {
   return (
     <ul>
-      {gamesResult.map(({ gameName, id }) => (
-        <li key={id}>{gameName}</li>
+      {gamesResult.map(({ gameName, id }, index) => (
+        <li key={id + index}>{gameName}</li>
       ))}
     </ul>
   );

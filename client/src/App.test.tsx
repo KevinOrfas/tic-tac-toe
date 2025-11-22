@@ -1,18 +1,56 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import App from './App';
 
 describe('App', () => {
-  it('renders the app with title', () => {
+  beforeEach(() => {
+    globalThis.fetch = vi.fn() as typeof fetch;
+  });
+
+  it('renders the app with title and button', async () => {
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => [],
+    } as Response);
+
     render(<App />);
 
     expect(screen.getByText(/Multiplayer Tic-Tac-Toe/i)).toBeInTheDocument();
-  });
-
-  it('renders New Game button', () => {
-    render(<App />);
-
     const button = screen.getByRole('button', { name: /New Game/i });
     expect(button).toBeInTheDocument();
+
+    // Wait for useEffect to complete
+    await waitFor(() => {
+      expect(vi.mocked(globalThis.fetch)).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('should list a new game upon clicking the button', async () => {
+    const user = userEvent.setup();
+
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => [],
+    } as Response);
+
+    render(<App />);
+
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        id: '1',
+        gameName: 'Test Gamee',
+        winner: '',
+        timeSpent: '',
+      }),
+    } as Response);
+
+    const button = screen.getByRole('button', { name: /New Game/i });
+    await user.click(button);
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Gamee')).toBeInTheDocument();
+    });
   });
 });

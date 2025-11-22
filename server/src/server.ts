@@ -28,7 +28,7 @@ export function createServer(): http.Server {
     }
 
     if (req.method === 'POST' && req.url === '/api/v1/games') {
-      (req, res);
+      handleCreateGameRoute(req, res);
       return;
     }
 
