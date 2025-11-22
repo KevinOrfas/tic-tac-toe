@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import http from 'node:http';
-import { ResponseShape } from './operations/index.js';
+import { Game } from './types.js';
 
 describe('HTTP Server', () => {
   let server: http.Server;
@@ -46,7 +46,7 @@ describe('HTTP Server', () => {
     const response = await fetch(`${baseUrl}/api/v1/games`);
     expect(response.status).toBe(200);
 
-    const data: ResponseShape[] = (await response.json()) as ResponseShape[];
+    const data: Game[] = (await response.json()) as Game[];
     expect(Array.isArray(data)).toBe(true);
 
     if (data.length > 0) {
