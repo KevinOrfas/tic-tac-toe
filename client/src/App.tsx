@@ -2,6 +2,7 @@ import './App.css';
 import { GamesList, type ResponseShape } from './components/GamesList.tsx';
 import { useEffect, useState } from 'react';
 import { Route, useLocation } from 'wouter';
+import { GameBoard } from './components/GameBoard.tsx';
 
 function HomePage() {
   const [, setLocation] = useLocation();
@@ -62,21 +63,12 @@ function HomePage() {
   );
 }
 
-function GameBoard({ params }: { params: { id: string } }) {
-  return (
-    <div>
-      <h1>Game Board</h1>
-      <p>Game ID: {params.id}</p>
-    </div>
-  );
-}
-
 function App() {
   return (
     <>
       <Route path="/" component={HomePage} />
       <Route path="/game/:id">
-        {(params) => <GameBoard params={params} />}
+        {(params) => <GameBoard gameId={params.id} />}
       </Route>
     </>
   );
