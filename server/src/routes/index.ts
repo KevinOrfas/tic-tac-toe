@@ -9,3 +9,18 @@ export function handleGamesRoute(
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify(games));
 }
+
+export function handleCreateGameRoute(
+  _req: http.IncomingMessage,
+  res: http.ServerResponse
+) {
+  res.writeHead(201, { 'Content-Type': 'application/json' });
+  res.end(
+    JSON.stringify({
+      id: '1',
+      gameName: 'Test Game',
+      winner: '',
+      timeSpent: '',
+    })
+  );
+}

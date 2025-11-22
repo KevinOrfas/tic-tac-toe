@@ -1,5 +1,5 @@
 import http from 'node:http';
-import { handleGamesRoute } from './routes/index.js';
+import { handleCreateGameRoute, handleGamesRoute } from './routes/index.js';
 
 export function createServer(): http.Server {
   return http.createServer((req, res) => {
@@ -28,15 +28,7 @@ export function createServer(): http.Server {
     }
 
     if (req.method === 'POST' && req.url === '/api/v1/games') {
-      res.writeHead(201, { 'Content-Type': 'application/json' });
-      res.end(
-        JSON.stringify({
-          id: '1',
-          gameName: 'Test Game',
-          winner: '',
-          timeSpent: '',
-        })
-      );
+      (req, res);
       return;
     }
 
