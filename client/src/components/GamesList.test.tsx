@@ -13,5 +13,6 @@ describe('App', () => {
     );
 
     expect(screen.getByText(/Santiago/i)).toBeInTheDocument();
+    expect(screen.getByText(/Winner: Player 1/i)).toBeInTheDocument();
   });
 });
