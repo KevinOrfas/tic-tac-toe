@@ -42,17 +42,6 @@ describe('HTTP Server', () => {
     expect(data).toEqual([]);
   });
 
-  it('should return and array of finished games games with winners', async () => {
-    const response = await fetch(`${baseUrl}/api/v1/games`);
-    expect(response.status).toBe(200);
-
-    const data = await response.json();
-    expect(data).toEqual([
-      { id: '1', winner: 'Player 1', timeSpent: '', gameName: 'Sal' },
-      { id: '2', winner: 'Player 2', timeSpent: '', gameName: 'Santiago' },
-    ]);
-  });
-
   it('should return list of games with winners', async () => {
     const response = await fetch(`${baseUrl}/api/v1/games`);
     expect(response.status).toBe(200);
@@ -69,5 +58,41 @@ describe('HTTP Server', () => {
         { id: '2', winner: 'Player 2', timeSpent: '', gameName: 'Santiago' },
       ]);
     }
+  });
+
+  describe('CORS', () => {
+    it('should include CORS headers on GET requests', async () => {
+      const response = await fetch(`${baseUrl}/api/v1/games`);
+
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*');
+      expect(response.headers.get('Access-Control-Allow-Methods')).toBe(
+        'GET, POST, PUT, DELETE, OPTIONS'
+      );
+      expect(response.headers.get('Access-Control-Allow-Headers')).toBe(
+        'Content-Type'
+      );
+    });
+
+    it('should handle OPTIONS preflight requests', async () => {
+      const response = await fetch(`${baseUrl}/api/v1/games`, {
+        method: 'OPTIONS',
+      });
+
+      expect(response.status).toBe(204);
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*');
+      expect(response.headers.get('Access-Control-Allow-Methods')).toBe(
+        'GET, POST, PUT, DELETE, OPTIONS'
+      );
+      expect(response.headers.get('Access-Control-Allow-Headers')).toBe(
+        'Content-Type'
+      );
+    });
+
+    it('should include CORS headers on 404 responses', async () => {
+      const response = await fetch(`${baseUrl}/api/v1/nonexistent`);
+
+      expect(response.status).toBe(404);
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*');
+    });
   });
 });
