@@ -4,6 +4,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import { io as ioClient, Socket as ClientSocket } from 'socket.io-client';
 import { createServer } from './server.js';
 import { setupSocketServer } from './socket.js';
+import { startTestServer, stopTestServer } from './testHelpers.js';
 
 describe('Socket.io Server', () => {
   let httpServer: http.Server;
@@ -14,16 +15,7 @@ describe('Socket.io Server', () => {
   beforeAll(async () => {
     httpServer = createServer();
     io = setupSocketServer(httpServer);
-
-    await new Promise<void>((resolve) => {
-      httpServer.listen(0, () => {
-        const address = httpServer.address();
-        const port =
-          address && typeof address === 'object' ? address.port : 3001;
-        serverUrl = `http://localhost:${port}`;
-        resolve();
-      });
-    });
+    serverUrl = await startTestServer(httpServer);
   });
 
   afterAll(async () => {
@@ -33,9 +25,7 @@ describe('Socket.io Server', () => {
     if (io) {
       await io.close();
     }
-    await new Promise<void>((resolve) => {
-      httpServer.close(() => resolve());
-    });
+    await stopTestServer(httpServer);
   });
 
   it('should establish a socket connection', async () => {

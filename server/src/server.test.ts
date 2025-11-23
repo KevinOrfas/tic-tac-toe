@@ -1,29 +1,20 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import http from 'node:http';
 import { Game } from './types.js';
+import { startTestServer, stopTestServer } from './testHelpers.js';
+const { createServer } = await import('./server.js');
 
 describe('HTTP Server', () => {
-  let server: http.Server;
+  let httpServer: http.Server;
   let baseUrl: string;
 
   beforeAll(async () => {
-    const { createServer } = await import('./server.js');
-    server = createServer();
-    await new Promise<void>((resolve) => {
-      server.listen(0, () => {
-        const address = server.address();
-        const port =
-          address && typeof address === 'object' ? address.port : 3001;
-        baseUrl = `http://localhost:${port}`;
-        resolve();
-      });
-    });
+    httpServer = createServer();
+    baseUrl = await startTestServer(httpServer);
   });
 
   afterAll(async () => {
-    await new Promise<void>((resolve) => {
-      server.close(() => resolve());
-    });
+    await stopTestServer(httpServer);
   });
 
   it('should return health status', async () => {
