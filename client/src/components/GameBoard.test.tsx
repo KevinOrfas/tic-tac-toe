@@ -54,20 +54,22 @@ describe('GameBoard', () => {
     expect(cells[5]).toHaveTextContent('');
   });
 
-  it('should detect a draw when all cells are filled with no winner', async () => {
+  it('should show "Draw" only when board is full with no winner', async () => {
     render(<GameBoard gameId="123" />);
     const cells = screen.getAllByRole('button');
 
     await userEvent.click(cells[0]);
-    await userEvent.click(cells[2]);
     await userEvent.click(cells[1]);
+    await userEvent.click(cells[2]);
+    await userEvent.click(cells[4]);
     await userEvent.click(cells[3]);
     await userEvent.click(cells[5]);
-    await userEvent.click(cells[4]);
+    await userEvent.click(cells[7]);
     await userEvent.click(cells[6]);
     await userEvent.click(cells[8]);
-    await userEvent.click(cells[7]);
 
-    expect(screen.getByText(/Draw|Tie/i)).toBeInTheDocument();
+    expect(screen.getByText(/Draw/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Winner/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Next player/i)).not.toBeInTheDocument();
   });
 });
