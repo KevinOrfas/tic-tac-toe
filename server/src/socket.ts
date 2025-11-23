@@ -5,7 +5,7 @@ import type {
   CreateGameData,
   JoinGameData,
   ErrorResponse,
-} from '../../shared/types.js';
+} from '@shared/types.js';
 
 interface Player {
   socketId: string;
@@ -31,12 +31,10 @@ export function setupSocketServer(httpServer: http.Server): SocketIOServer {
   io.on('connection', (socket) => {
     socket.on('createGame', ({ playerName }: CreateGameData) => {
       const gameId = randomUUID();
-      const gameRoom: GameRoom = {
+      gameRooms.set(gameId, {
         id: gameId,
         players: [{ socketId: socket.id, playerName, playerNumber: 1 }],
-      };
-
-      gameRooms.set(gameId, gameRoom);
+      });
       socket.join(gameId);
       socket.emit('gameCreated', { gameId, playerNumber: 1 });
     });
@@ -45,8 +43,7 @@ export function setupSocketServer(httpServer: http.Server): SocketIOServer {
       const gameRoom = gameRooms.get(gameId);
 
       if (!gameRoom) {
-        const error: ErrorResponse = { message: 'Game not found' };
-        socket.emit('error', error);
+        socket.emit('error', { message: 'Game not found' });
         return;
       }
 
