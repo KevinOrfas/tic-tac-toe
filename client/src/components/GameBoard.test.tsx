@@ -22,4 +22,12 @@ describe('GameBoard', () => {
     await userEvent.click(cell);
     expect(cell).toHaveTextContent('X');
   });
+
+  it('should handle click events and update the second selection with O', async () => {
+    render(<GameBoard gameId="123" />);
+    const [cell1, cell2] = screen.getAllByRole('button');
+    await userEvent.click(cell1);
+    await userEvent.click(cell2);
+    expect(cell2).toHaveTextContent('O');
+  });
 });

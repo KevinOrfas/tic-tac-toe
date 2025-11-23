@@ -7,10 +7,13 @@ type Cell = 'X' | 'O' | null;
 
 export function GameBoard({ gameId }: GameBoardProps) {
   const [board, setBoard] = useState<Cell[]>(Array(9).fill(null));
+  const [isXNext, setIsXNext] = useState(true);
+
   const handleCellClick = (index: number) => {
     const newBoard = [...board];
-    newBoard[index] = 'X';
+    newBoard[index] = isXNext ? 'X' : 'O';
     setBoard(newBoard);
+    setIsXNext(!isXNext);
   };
   return (
     <div>
@@ -36,6 +39,7 @@ export function GameBoard({ gameId }: GameBoardProps) {
                 fontSize: '24px',
                 border: '2px solid #ddd',
                 backgroundColor: '#fff',
+                color: cell === 'X' ? 'red' : 'blue',
                 cursor: 'pointer',
               }}
             >
