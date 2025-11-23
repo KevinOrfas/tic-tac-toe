@@ -24,6 +24,7 @@ export function setupSocketServer(httpServer: http.Server): SocketIOServer {
       gameRooms.set(gameId, {
         id: gameId,
         players: [{ socketId: socket.id, playerName, playerNumber: 1 }],
+        currentTurn: 1,
       });
       socket.join(gameId);
       socket.emit('gameCreated', { gameId, playerNumber: 1 });
@@ -62,13 +63,30 @@ export function setupSocketServer(httpServer: http.Server): SocketIOServer {
       socket.emit('gameJoined', { gameId, playerNumber: 2 });
     });
 
-    socket.on('makeMove', ({ gameId, cellIndex, player }: MakeMoveData) => {
+    socket.on('makeMove', ({ gameId, cellIndex }: MakeMoveData) => {
       const gameRoom = gameRooms.get(gameId);
 
       if (!gameRoom) {
         socket.emit('error', { message: 'Game not found' });
         return;
       }
+
+      const movingPlayer = gameRoom.players.find(
+        (p) => p.socketId === socket.id
+      );
+
+      if (!movingPlayer) {
+        socket.emit('error', { message: 'You are not in this game' });
+        return;
+      }
+
+      if (movingPlayer.playerNumber !== gameRoom.currentTurn) {
+        socket.emit('error', { message: 'Not your turn' });
+        return;
+      }
+
+      const player = movingPlayer.playerNumber === 1 ? 'X' : 'O';
+      gameRoom.currentTurn = gameRoom.currentTurn === 1 ? 2 : 1;
 
       io.to(gameId).emit('moveMade', { cellIndex, player });
     });

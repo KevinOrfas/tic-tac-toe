@@ -1,10 +1,29 @@
-import { screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { screen, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GameBoard } from './GameBoard.tsx';
 import userEvent from '@testing-library/user-event';
 import { renderWithSocket } from '../test/helpers.tsx';
+import * as SocketContext from '../hooks/useSocket';
+import type { Socket } from 'socket.io-client';
+
+const mockEmit = vi.fn();
+const mockOn = vi.fn();
+const mockOff = vi.fn();
+const mockSocket = {
+  id: '1',
+  emit: mockEmit,
+  on: mockOn,
+  off: mockOff,
+  connected: true,
+  connect: vi.fn(),
+} as Partial<Socket> as Socket;
 
 describe('GameBoard', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.spyOn(SocketContext, 'useSocket').mockReturnValue(mockSocket);
+  });
+
   it('renders a 3x3 grid of cells', () => {
     renderWithSocket(<GameBoard gameId="123" />);
 
@@ -17,27 +36,91 @@ describe('GameBoard', () => {
     });
   });
 
-  it('should handle click events and update the first selection with X', async () => {
+  it('should emit makeMove when cell is clicked', async () => {
     renderWithSocket(<GameBoard gameId="123" />);
     const [cell] = screen.getAllByRole('button');
     await userEvent.click(cell);
-    expect(cell).toHaveTextContent('X');
+
+    expect(mockEmit).toHaveBeenCalledWith('makeMove', {
+      gameId: '123',
+      cellIndex: 0,
+    });
   });
 
-  it('should handle click events and update the second selection with O', async () => {
+  it('should register socket event listeners on mount', () => {
     renderWithSocket(<GameBoard gameId="123" />);
-    const [cell1, cell2] = screen.getAllByRole('button');
-    await userEvent.click(cell1);
-    await userEvent.click(cell2);
-    expect(cell2).toHaveTextContent('O');
+
+    expect(mockOn).toHaveBeenCalledWith('gameJoined', expect.any(Function));
+    expect(mockOn).toHaveBeenCalledWith('error', expect.any(Function));
+    expect(mockOn).toHaveBeenCalledWith('connect', expect.any(Function));
+    expect(mockOn).toHaveBeenCalledWith('moveMade', expect.any(Function));
   });
 
-  it('should not allow multiple clicks on the same cell', async () => {
+  it('should emit joinGame when socket is already connected', () => {
     renderWithSocket(<GameBoard gameId="123" />);
-    const [cell1] = screen.getAllByRole('button');
-    await userEvent.click(cell1);
-    await userEvent.click(cell1);
-    expect(cell1).toHaveTextContent('X');
+
+    expect(mockEmit).toHaveBeenCalledWith('joinGame', {
+      gameId: '123',
+      playerName: 'Player 2',
+    });
+  });
+
+  it('should update board when moveMade event is received', () => {
+    renderWithSocket(<GameBoard gameId="123" />);
+    const cells = screen.getAllByRole('button');
+
+    const [, moveMadeHandler] = mockOn.mock.calls.find(
+      (call) => call[0] === 'moveMade'
+    )!;
+
+    act(() => {
+      moveMadeHandler({ cellIndex: 0, player: 'X' });
+    });
+
+    expect(cells[0]).toHaveTextContent('X');
+  });
+
+  it('should update board with O when second move is made', () => {
+    renderWithSocket(<GameBoard gameId="123" />);
+    const cells = screen.getAllByRole('button');
+
+    const [, moveMadeHandler] = mockOn.mock.calls.find(
+      (call) => call[0] === 'moveMade'
+    )!;
+
+    act(() => {
+      moveMadeHandler({ cellIndex: 0, player: 'X' });
+    });
+    expect(cells[0]).toHaveTextContent('X');
+
+    act(() => {
+      moveMadeHandler({ cellIndex: 1, player: 'O' });
+    });
+    expect(cells[1]).toHaveTextContent('O');
+  });
+
+  it('should clear error when moveMade event is received', () => {
+    renderWithSocket(<GameBoard gameId="123" />);
+
+    const [, errorHandler] = mockOn.mock.calls.find(
+      (call) => call[0] === 'error'
+    )!;
+
+    act(() => {
+      errorHandler({ message: 'Not your turn' });
+    });
+
+    expect(screen.getByText(/Not your turn/i)).toBeInTheDocument();
+
+    const [, moveMadeHandler] = mockOn.mock.calls.find(
+      (call) => call[0] === 'moveMade'
+    )!;
+
+    act(() => {
+      moveMadeHandler({ cellIndex: 0, player: 'X' });
+    });
+
+    expect(screen.queryByText(/Not your turn/i)).not.toBeInTheDocument();
   });
 
   it('should not allow clicking after a winner is found', async () => {
@@ -55,19 +138,23 @@ describe('GameBoard', () => {
     expect(cells[5]).toHaveTextContent('');
   });
 
-  it('should show "Draw" only when board is full with no winner', async () => {
+  it('should show "Draw" only when board is full with no winner', () => {
     renderWithSocket(<GameBoard gameId="123" />);
-    const cells = screen.getAllByRole('button');
+    const [, moveMadeHandler] = mockOn.mock.calls.find(
+      (call) => call[0] === 'moveMade'
+    )!;
 
-    await userEvent.click(cells[0]);
-    await userEvent.click(cells[1]);
-    await userEvent.click(cells[2]);
-    await userEvent.click(cells[4]);
-    await userEvent.click(cells[3]);
-    await userEvent.click(cells[5]);
-    await userEvent.click(cells[7]);
-    await userEvent.click(cells[6]);
-    await userEvent.click(cells[8]);
+    act(() => {
+      moveMadeHandler({ cellIndex: 0, player: 'X' }); // X
+      moveMadeHandler({ cellIndex: 1, player: 'O' }); // O
+      moveMadeHandler({ cellIndex: 2, player: 'X' }); // X
+      moveMadeHandler({ cellIndex: 4, player: 'O' }); // O (center)
+      moveMadeHandler({ cellIndex: 3, player: 'X' }); // X
+      moveMadeHandler({ cellIndex: 5, player: 'O' }); // O
+      moveMadeHandler({ cellIndex: 7, player: 'X' }); // X
+      moveMadeHandler({ cellIndex: 6, player: 'O' }); // O
+      moveMadeHandler({ cellIndex: 8, player: 'X' }); // X (last move)
+    });
 
     expect(screen.getByText(/Draw/i)).toBeInTheDocument();
     expect(screen.queryByText(/Winner/i)).not.toBeInTheDocument();

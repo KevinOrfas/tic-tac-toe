@@ -19,7 +19,6 @@ export interface ErrorResponse {
 export interface MakeMoveData {
   gameId: string;
   cellIndex: number;
-  player: string;
 }
 
 interface Player {
@@ -31,4 +30,5 @@ interface Player {
 export interface GameRoom {
   id: string;
   players: Player[];
+  currentTurn: number;
 }

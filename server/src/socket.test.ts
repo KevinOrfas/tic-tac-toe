@@ -141,4 +141,44 @@ describe('Socket.io Server', () => {
     socket1.disconnect();
     socket2.disconnect();
   });
+
+  it('should reject move when it is not the players turn', async () => {
+    const socket1 = ioClient(serverUrl);
+    const socket2 = ioClient(serverUrl);
+
+    socket1.emit('createGame', { playerName: 'Player1' });
+
+    const createData = await new Promise<GameResponse>((resolve) => {
+      socket1.on('gameCreated', (data: GameResponse) => {
+        resolve(data);
+      });
+    });
+
+    socket2.emit('joinGame', {
+      gameId: createData.gameId,
+      playerName: 'Player2',
+    });
+
+    await new Promise<GameResponse>((resolve) => {
+      socket2.on('gameJoined', (data: GameResponse) => {
+        resolve(data);
+      });
+    });
+
+    socket2.emit('makeMove', {
+      gameId: createData.gameId,
+      cellIndex: 0,
+    });
+
+    const error = await new Promise<{ message: string }>((resolve) => {
+      socket2.on('error', (data) => {
+        resolve(data);
+      });
+    });
+
+    expect(error.message).toBe('Not your turn');
+
+    socket1.disconnect();
+    socket2.disconnect();
+  });
 });

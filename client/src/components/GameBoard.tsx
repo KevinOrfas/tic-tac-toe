@@ -45,6 +45,7 @@ export function GameBoard({ gameId }: GameBoardProps) {
         return newBoard;
       });
       setIsXNext(data.player !== 'X');
+      setError((prevError) => (prevError !== null ? null : prevError));
     };
 
     socket.on('gameJoined', handleGameJoined);
@@ -71,10 +72,7 @@ export function GameBoard({ gameId }: GameBoardProps) {
       return;
     }
 
-    const newBoard = [...board];
-    newBoard[index] = isXNext ? 'X' : 'O';
-    setBoard(newBoard);
-    setIsXNext(!isXNext);
+    socket.emit('makeMove', { gameId, cellIndex: index });
   };
   return (
     <div>
