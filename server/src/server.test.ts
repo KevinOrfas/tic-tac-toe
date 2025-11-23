@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import http from 'node:http';
 import { Game } from './types.js';
-import { startTestServer, stopTestServer } from './testHelpers.js';
+import { startTestServer, stopTestServer } from './test/testHelpers.js';
 const { createServer } = await import('./server.js');
 
 describe('HTTP Server', () => {

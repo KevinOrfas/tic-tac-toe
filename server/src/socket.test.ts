@@ -4,8 +4,13 @@ import { Server as SocketIOServer } from 'socket.io';
 import { io as ioClient, Socket as ClientSocket } from 'socket.io-client';
 import { createServer } from './server.js';
 import { setupSocketServer } from './socket.js';
-import { startTestServer, stopTestServer } from './testHelpers.js';
-import type { GameResponse } from '@shared/types.js';
+import { startTestServer, stopTestServer } from './test/testHelpers.js';
+import {
+  createGame,
+  joinGame,
+  setupTwoPlayerGame,
+  waitForSocketEvent,
+} from './test/socketTestHelpers.js';
 
 describe('Socket.io Server', () => {
   let httpServer: http.Server;
@@ -32,24 +37,14 @@ describe('Socket.io Server', () => {
   it('should establish a socket connection', async () => {
     clientSocket = ioClient(serverUrl);
 
-    await new Promise<void>((resolve) => {
-      clientSocket.on('connect', () => {
-        expect(clientSocket.connected).toBe(true);
-        resolve();
-      });
-    });
+    await waitForSocketEvent(clientSocket, 'connect');
+    expect(clientSocket.connected).toBe(true);
   });
 
   it('should allow a player to create a game room', async () => {
     const socket = ioClient(serverUrl);
 
-    socket.emit('createGame', { playerName: 'Player1' });
-
-    const data = await new Promise<GameResponse>((resolve) => {
-      socket.on('gameCreated', (data: GameResponse) => {
-        resolve(data);
-      });
-    });
+    const data = await createGame(socket, 'Player1');
 
     expect(data).toHaveProperty('gameId');
     expect(data.playerNumber).toBe(1);
@@ -60,24 +55,8 @@ describe('Socket.io Server', () => {
     const socket1 = ioClient(serverUrl);
     const socket2 = ioClient(serverUrl);
 
-    socket1.emit('createGame', { playerName: 'Player1' });
-
-    const createData = await new Promise<GameResponse>((resolve) => {
-      socket1.on('gameCreated', (data: GameResponse) => {
-        resolve(data);
-      });
-    });
-
-    socket2.emit('joinGame', {
-      gameId: createData.gameId,
-      playerName: 'Player2',
-    });
-
-    const joinData = await new Promise<GameResponse>((resolve) => {
-      socket2.on('gameJoined', (data: GameResponse) => {
-        resolve(data);
-      });
-    });
+    const createData = await createGame(socket1, 'Player1');
+    const joinData = await joinGame(socket2, createData.gameId, 'Player2');
 
     expect(joinData.gameId).toBe(createData.gameId);
     expect(joinData.playerNumber).toBe(2);
@@ -87,51 +66,23 @@ describe('Socket.io Server', () => {
   });
 
   it('should broadcast move to all players in the game', async () => {
-    const socket1 = ioClient(serverUrl);
-    const socket2 = ioClient(serverUrl);
-
-    socket1.emit('createGame', { playerName: 'Player1' });
-
-    const createData = await new Promise<GameResponse>((resolve) => {
-      socket1.on('gameCreated', (data: GameResponse) => {
-        resolve(data);
-      });
-    });
-
-    socket2.emit('joinGame', {
-      gameId: createData.gameId,
-      playerName: 'Player2',
-    });
-
-    await new Promise<GameResponse>((resolve) => {
-      socket2.on('gameJoined', (data: GameResponse) => {
-        resolve(data);
-      });
-    });
+    const { socket1, socket2, gameId } = await setupTwoPlayerGame(serverUrl);
 
     socket1.emit('makeMove', {
-      gameId: createData.gameId,
+      gameId,
       cellIndex: 0,
       player: 'X',
     });
 
-    const player1Move = await new Promise<{
+    const player1Move = await waitForSocketEvent<{
       cellIndex: number;
       player: string;
-    }>((resolve) => {
-      socket1.on('moveMade', (data) => {
-        resolve(data);
-      });
-    });
+    }>(socket1, 'moveMade');
 
-    const player2Move = await new Promise<{
+    const player2Move = await waitForSocketEvent<{
       cellIndex: number;
       player: string;
-    }>((resolve) => {
-      socket2.on('moveMade', (data) => {
-        resolve(data);
-      });
-    });
+    }>(socket2, 'moveMade');
 
     expect(player1Move.cellIndex).toBe(0);
     expect(player1Move.player).toBe('X');
@@ -143,38 +94,17 @@ describe('Socket.io Server', () => {
   });
 
   it('should reject move when it is not the players turn', async () => {
-    const socket1 = ioClient(serverUrl);
-    const socket2 = ioClient(serverUrl);
-
-    socket1.emit('createGame', { playerName: 'Player1' });
-
-    const createData = await new Promise<GameResponse>((resolve) => {
-      socket1.on('gameCreated', (data: GameResponse) => {
-        resolve(data);
-      });
-    });
-
-    socket2.emit('joinGame', {
-      gameId: createData.gameId,
-      playerName: 'Player2',
-    });
-
-    await new Promise<GameResponse>((resolve) => {
-      socket2.on('gameJoined', (data: GameResponse) => {
-        resolve(data);
-      });
-    });
+    const { socket1, socket2, gameId } = await setupTwoPlayerGame(serverUrl);
 
     socket2.emit('makeMove', {
-      gameId: createData.gameId,
+      gameId,
       cellIndex: 0,
     });
 
-    const error = await new Promise<{ message: string }>((resolve) => {
-      socket2.on('error', (data) => {
-        resolve(data);
-      });
-    });
+    const error = await waitForSocketEvent<{ message: string }>(
+      socket2,
+      'error'
+    );
 
     expect(error.message).toBe('Not your turn');
 
