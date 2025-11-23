@@ -38,4 +38,20 @@ describe('Socket.io Server', () => {
       });
     });
   });
+
+  it('should allow a player to create a game room', async () => {
+    const socket = ioClient(serverUrl);
+
+    socket.emit('createGame', { playerName: 'Player1' });
+
+    const data = await new Promise<{ gameId: string; playerNumber: number }>((resolve) => {
+      socket.on('gameCreated', (data) => {
+        resolve(data);
+      });
+    });
+
+    expect(data).toHaveProperty('gameId');
+    expect(data.playerNumber).toBe(1);
+    socket.disconnect();
+  });
 });
