@@ -38,4 +38,19 @@ describe('GameBoard', () => {
     await userEvent.click(cell1);
     expect(cell1).toHaveTextContent('X');
   });
+
+  it('should not allow clicking after a winner is found', async () => {
+    render(<GameBoard gameId="123" />);
+    const cells = screen.getAllByRole('button');
+
+    await userEvent.click(cells[0]);
+    await userEvent.click(cells[3]);
+    await userEvent.click(cells[1]);
+    await userEvent.click(cells[4]);
+    await userEvent.click(cells[2]);
+
+    await userEvent.click(cells[5]);
+
+    expect(cells[5]).toHaveTextContent('');
+  });
 });
