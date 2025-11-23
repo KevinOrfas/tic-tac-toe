@@ -1,6 +1,11 @@
 import http from 'node:http';
 import { Server as SocketIOServer } from 'socket.io';
 import { randomUUID } from 'node:crypto';
+import type {
+  CreateGameData,
+  JoinGameData,
+  ErrorResponse,
+} from '../../shared/types.js';
 
 interface Player {
   socketId: string;
@@ -11,24 +16,6 @@ interface Player {
 interface GameRoom {
   id: string;
   players: Player[];
-}
-
-export interface CreateGameData {
-  playerName: string;
-}
-
-export interface JoinGameData {
-  gameId: string;
-  playerName: string;
-}
-
-export interface GameResponse {
-  gameId: string;
-  playerNumber: number;
-}
-
-export interface ErrorResponse {
-  message: string;
 }
 
 const gameRooms = new Map<string, GameRoom>();

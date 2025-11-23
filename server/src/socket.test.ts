@@ -3,8 +3,9 @@ import http from 'node:http';
 import { Server as SocketIOServer } from 'socket.io';
 import { io as ioClient, Socket as ClientSocket } from 'socket.io-client';
 import { createServer } from './server.js';
-import { setupSocketServer, type GameResponse } from './socket.js';
+import { setupSocketServer } from './socket.js';
 import { startTestServer, stopTestServer } from './testHelpers.js';
+import type { GameResponse } from '../../shared/types.js';
 
 describe('Socket.io Server', () => {
   let httpServer: http.Server;
