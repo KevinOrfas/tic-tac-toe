@@ -3,14 +3,15 @@ import { GamesList, type ResponseShape } from './components/GamesList.tsx';
 import { useEffect, useState } from 'react';
 import { Route, useLocation } from 'wouter';
 import { GameBoard } from './components/GameBoard.tsx';
-import { io, Socket } from 'socket.io-client';
+import { SocketProvider } from './context/SocketContext.tsx';
+import { useSocket } from './hooks/useSocket.ts';
 
 function HomePage() {
   const [, setLocation] = useLocation();
   const [games, setGames] = useState<ResponseShape[]>([
     { id: '', winner: '', gameName: '', timeSpent: '' },
   ]);
-  const [socket] = useState<Socket>(() => io('http://localhost:3000'));
+  const socket = useSocket();
 
   useEffect(() => {
     const handleConnect = () => {
@@ -91,12 +92,12 @@ function HomePage() {
 
 function App() {
   return (
-    <>
+    <SocketProvider>
       <Route path="/" component={HomePage} />
       <Route path="/game/:id">
         {(params) => <GameBoard gameId={params.id} />}
       </Route>
-    </>
+    </SocketProvider>
   );
 }
 
