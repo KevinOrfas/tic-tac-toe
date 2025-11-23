@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { GameBoard } from './GameBoard.tsx';
+import userEvent from '@testing-library/user-event';
 
 describe('GameBoard', () => {
   it('renders a 3x3 grid of cells', () => {
@@ -13,5 +14,12 @@ describe('GameBoard', () => {
       display: 'grid',
       gridTemplateColumns: 'repeat(3, 100px)',
     });
+  });
+
+  it('should handle click events and update the first selection with X', async () => {
+    render(<GameBoard gameId="123" />);
+    const [cell] = screen.getAllByRole('button');
+    await userEvent.click(cell);
+    expect(cell).toHaveTextContent('X');
   });
 });
