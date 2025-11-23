@@ -1,11 +1,12 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { GameBoard } from './GameBoard.tsx';
 import userEvent from '@testing-library/user-event';
+import { renderWithSocket } from '../test/helpers.tsx';
 
 describe('GameBoard', () => {
   it('renders a 3x3 grid of cells', () => {
-    render(<GameBoard gameId="123" />);
+    renderWithSocket(<GameBoard gameId="123" />);
 
     const grid = screen.getByTestId('game-grid');
     const cells = screen.getAllByRole('button');
@@ -17,14 +18,14 @@ describe('GameBoard', () => {
   });
 
   it('should handle click events and update the first selection with X', async () => {
-    render(<GameBoard gameId="123" />);
+    renderWithSocket(<GameBoard gameId="123" />);
     const [cell] = screen.getAllByRole('button');
     await userEvent.click(cell);
     expect(cell).toHaveTextContent('X');
   });
 
   it('should handle click events and update the second selection with O', async () => {
-    render(<GameBoard gameId="123" />);
+    renderWithSocket(<GameBoard gameId="123" />);
     const [cell1, cell2] = screen.getAllByRole('button');
     await userEvent.click(cell1);
     await userEvent.click(cell2);
@@ -32,7 +33,7 @@ describe('GameBoard', () => {
   });
 
   it('should not allow multiple clicks on the same cell', async () => {
-    render(<GameBoard gameId="123" />);
+    renderWithSocket(<GameBoard gameId="123" />);
     const [cell1] = screen.getAllByRole('button');
     await userEvent.click(cell1);
     await userEvent.click(cell1);
@@ -40,7 +41,7 @@ describe('GameBoard', () => {
   });
 
   it('should not allow clicking after a winner is found', async () => {
-    render(<GameBoard gameId="123" />);
+    renderWithSocket(<GameBoard gameId="123" />);
     const cells = screen.getAllByRole('button');
 
     await userEvent.click(cells[0]);
@@ -55,7 +56,7 @@ describe('GameBoard', () => {
   });
 
   it('should show "Draw" only when board is full with no winner', async () => {
-    render(<GameBoard gameId="123" />);
+    renderWithSocket(<GameBoard gameId="123" />);
     const cells = screen.getAllByRole('button');
 
     await userEvent.click(cells[0]);
