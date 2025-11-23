@@ -78,7 +78,7 @@ describe('App', () => {
     await user.click(button);
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/game/123');
+      expect(window.location.pathname).toMatch(/^\/game\/[a-f0-9-]{36}$/);
     });
   });
 });
