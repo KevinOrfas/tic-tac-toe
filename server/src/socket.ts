@@ -92,7 +92,19 @@ export function setupSocketServer(httpServer: http.Server): SocketIOServer {
     });
 
     socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id);
+      for (const [gameId, gameRoom] of gameRooms.entries()) {
+        const disconnectedPlayer = gameRoom.players.find(
+          (p) => p.socketId === socket.id
+        );
+
+        if (disconnectedPlayer) {
+          io.to(gameId).emit('playerDisconnected', {
+            playerNumber: disconnectedPlayer.playerNumber,
+            playerName: disconnectedPlayer.playerName,
+          });
+          break;
+        }
+      }
     });
   });
 

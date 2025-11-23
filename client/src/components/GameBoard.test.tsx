@@ -52,6 +52,10 @@ describe('GameBoard', () => {
     expect(mockOn).toHaveBeenCalledWith('error', expect.any(Function));
     expect(mockOn).toHaveBeenCalledWith('connect', expect.any(Function));
     expect(mockOn).toHaveBeenCalledWith('moveMade', expect.any(Function));
+    expect(mockOn).toHaveBeenCalledWith(
+      'playerDisconnected',
+      expect.any(Function)
+    );
   });
 
   it('should emit joinGame when socket is already connected', () => {
@@ -143,19 +147,38 @@ describe('GameBoard', () => {
     )!;
 
     act(() => {
-      moveMadeHandler({ cellIndex: 0, player: 'X' }); // X
-      moveMadeHandler({ cellIndex: 1, player: 'O' }); // O
-      moveMadeHandler({ cellIndex: 2, player: 'X' }); // X
-      moveMadeHandler({ cellIndex: 4, player: 'O' }); // O (center)
-      moveMadeHandler({ cellIndex: 3, player: 'X' }); // X
-      moveMadeHandler({ cellIndex: 5, player: 'O' }); // O
-      moveMadeHandler({ cellIndex: 7, player: 'X' }); // X
-      moveMadeHandler({ cellIndex: 6, player: 'O' }); // O
-      moveMadeHandler({ cellIndex: 8, player: 'X' }); // X (last move)
+      moveMadeHandler({ cellIndex: 0, player: 'X' });
+      moveMadeHandler({ cellIndex: 1, player: 'O' });
+      moveMadeHandler({ cellIndex: 2, player: 'X' });
+      moveMadeHandler({ cellIndex: 4, player: 'O' });
+      moveMadeHandler({ cellIndex: 3, player: 'X' });
+      moveMadeHandler({ cellIndex: 5, player: 'O' });
+      moveMadeHandler({ cellIndex: 7, player: 'X' });
+      moveMadeHandler({ cellIndex: 6, player: 'O' });
+      moveMadeHandler({ cellIndex: 8, player: 'X' });
     });
 
     expect(screen.getByText(/Draw/i)).toBeInTheDocument();
     expect(screen.queryByText(/Winner/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Next player/i)).not.toBeInTheDocument();
+  });
+
+  it('should display error message when a player disconnects', () => {
+    renderWithSocket(<GameBoard gameId="123" />);
+
+    const [, playerDisconnectedHandler] = mockOn.mock.calls.find(
+      (call) => call[0] === 'playerDisconnected'
+    )!;
+
+    act(() => {
+      playerDisconnectedHandler({
+        playerNumber: 1,
+        playerName: 'Player1',
+      });
+    });
+
+    expect(
+      screen.getByText(/Player 1 \(Player1\) has disconnected/i)
+    ).toBeInTheDocument();
   });
 });

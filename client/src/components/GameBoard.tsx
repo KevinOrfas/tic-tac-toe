@@ -49,10 +49,18 @@ export function GameBoard({ gameId }: GameBoardProps) {
       setError((prevError) => (prevError !== null ? null : prevError));
     };
 
+    const handlePlayerDisconnected = (data: {
+      playerNumber: number;
+      playerName: string;
+    }) => {
+      setError(`Player ${data.playerNumber} (${data.playerName}) has disconnected`);
+    };
+
     socket.on('gameJoined', handleGameJoined);
     socket.on('error', handleError);
     socket.on('connect', handleConnect);
     socket.on('moveMade', handleMoveMade);
+    socket.on('playerDisconnected', handlePlayerDisconnected);
 
     if (socket.connected) {
       socket.emit('joinGame', { gameId, playerName: 'Player 2' });
@@ -65,6 +73,7 @@ export function GameBoard({ gameId }: GameBoardProps) {
       socket.off('error', handleError);
       socket.off('connect', handleConnect);
       socket.off('moveMade', handleMoveMade);
+      socket.off('playerDisconnected', handlePlayerDisconnected);
     };
   }, [socket, gameId]);
 

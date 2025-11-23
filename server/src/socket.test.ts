@@ -111,4 +111,22 @@ describe('Socket.io Server', () => {
     socket1.disconnect();
     socket2.disconnect();
   });
+
+  it('should notify other players when a player disconnects', async () => {
+    const { socket1, socket2 } = await setupTwoPlayerGame(serverUrl);
+
+    const disconnectPromise = waitForSocketEvent<{
+      playerNumber: number;
+      playerName: string;
+    }>(socket2, 'playerDisconnected');
+
+    socket1.disconnect();
+
+    const disconnectData = await disconnectPromise;
+
+    expect(disconnectData.playerNumber).toBe(1);
+    expect(disconnectData.playerName).toBe('Player1');
+
+    socket2.disconnect();
+  });
 });
