@@ -44,7 +44,7 @@ export function GameBoard({ gameId }: GameBoardProps) {
     <div>
       <h1>Game Board</h1>
       <p>Game ID: {gameId}</p>
-      {winner && <h2>Winner: {winner}</h2>}
+      {winner ? <h2>Winner: {winner}</h2> : <h2>Draw</h2>}
       <div>
         <h2>Game {gameId}</h2>
         <div
