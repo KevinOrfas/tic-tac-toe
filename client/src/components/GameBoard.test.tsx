@@ -30,4 +30,12 @@ describe('GameBoard', () => {
     await userEvent.click(cell2);
     expect(cell2).toHaveTextContent('O');
   });
+
+  it('should not allow multiple clicks on the same cell', async () => {
+    render(<GameBoard gameId="123" />);
+    const [cell1] = screen.getAllByRole('button');
+    await userEvent.click(cell1);
+    await userEvent.click(cell1);
+    expect(cell1).toHaveTextContent('X');
+  });
 });

@@ -10,6 +10,10 @@ export function GameBoard({ gameId }: GameBoardProps) {
   const [isXNext, setIsXNext] = useState(true);
 
   const handleCellClick = (index: number) => {
+    if (board[index]) {
+      return;
+    }
+
     const newBoard = [...board];
     newBoard[index] = isXNext ? 'X' : 'O';
     setBoard(newBoard);
