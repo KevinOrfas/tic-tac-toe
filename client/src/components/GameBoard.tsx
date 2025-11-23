@@ -38,9 +38,19 @@ export function GameBoard({ gameId }: GameBoardProps) {
       socket.emit('joinGame', { gameId, playerName: 'Player 2' });
     };
 
+    const handleMoveMade = (data: { cellIndex: number; player: string }) => {
+      setBoard((prevBoard) => {
+        const newBoard = [...prevBoard];
+        newBoard[data.cellIndex] = data.player as Cell;
+        return newBoard;
+      });
+      setIsXNext(data.player !== 'X');
+    };
+
     socket.on('gameJoined', handleGameJoined);
     socket.on('error', handleError);
     socket.on('connect', handleConnect);
+    socket.on('moveMade', handleMoveMade);
 
     if (socket.connected) {
       socket.emit('joinGame', { gameId, playerName: 'Player 2' });
@@ -51,6 +61,8 @@ export function GameBoard({ gameId }: GameBoardProps) {
     return () => {
       socket.off('gameJoined', handleGameJoined);
       socket.off('error', handleError);
+      socket.off('connect', handleConnect);
+      socket.off('moveMade', handleMoveMade);
     };
   }, [socket, gameId]);
 

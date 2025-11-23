@@ -15,3 +15,20 @@ export interface GameResponse {
 export interface ErrorResponse {
   message: string;
 }
+
+export interface MakeMoveData {
+  gameId: string;
+  cellIndex: number;
+  player: string;
+}
+
+interface Player {
+  socketId: string;
+  playerName: string;
+  playerNumber: number;
+}
+
+export interface GameRoom {
+  id: string;
+  players: Player[];
+}

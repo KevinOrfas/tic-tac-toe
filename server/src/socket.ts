@@ -3,20 +3,10 @@ import { Server as SocketIOServer } from 'socket.io';
 import { randomUUID } from 'node:crypto';
 import type {
   CreateGameData,
+  GameRoom,
   JoinGameData,
-  ErrorResponse,
+  MakeMoveData,
 } from '@shared/types.js';
-
-interface Player {
-  socketId: string;
-  playerName: string;
-  playerNumber: number;
-}
-
-interface GameRoom {
-  id: string;
-  players: Player[];
-}
 
 const gameRooms = new Map<string, GameRoom>();
 
@@ -59,8 +49,7 @@ export function setupSocketServer(httpServer: http.Server): SocketIOServer {
       }
 
       if (gameRoom.players.length >= 2) {
-        const error: ErrorResponse = { message: 'Game is full' };
-        socket.emit('error', error);
+        socket.emit('error', { message: 'Game is full' });
         return;
       }
 
@@ -71,6 +60,17 @@ export function setupSocketServer(httpServer: http.Server): SocketIOServer {
       });
       socket.join(gameId);
       socket.emit('gameJoined', { gameId, playerNumber: 2 });
+    });
+
+    socket.on('makeMove', ({ gameId, cellIndex, player }: MakeMoveData) => {
+      const gameRoom = gameRooms.get(gameId);
+
+      if (!gameRoom) {
+        socket.emit('error', { message: 'Game not found' });
+        return;
+      }
+
+      io.to(gameId).emit('moveMade', { cellIndex, player });
     });
 
     socket.on('disconnect', () => {

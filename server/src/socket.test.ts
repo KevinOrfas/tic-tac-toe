@@ -85,4 +85,60 @@ describe('Socket.io Server', () => {
     socket1.disconnect();
     socket2.disconnect();
   });
+
+  it('should broadcast move to all players in the game', async () => {
+    const socket1 = ioClient(serverUrl);
+    const socket2 = ioClient(serverUrl);
+
+    socket1.emit('createGame', { playerName: 'Player1' });
+
+    const createData = await new Promise<GameResponse>((resolve) => {
+      socket1.on('gameCreated', (data: GameResponse) => {
+        resolve(data);
+      });
+    });
+
+    socket2.emit('joinGame', {
+      gameId: createData.gameId,
+      playerName: 'Player2',
+    });
+
+    await new Promise<GameResponse>((resolve) => {
+      socket2.on('gameJoined', (data: GameResponse) => {
+        resolve(data);
+      });
+    });
+
+    socket1.emit('makeMove', {
+      gameId: createData.gameId,
+      cellIndex: 0,
+      player: 'X',
+    });
+
+    const player1Move = await new Promise<{
+      cellIndex: number;
+      player: string;
+    }>((resolve) => {
+      socket1.on('moveMade', (data) => {
+        resolve(data);
+      });
+    });
+
+    const player2Move = await new Promise<{
+      cellIndex: number;
+      player: string;
+    }>((resolve) => {
+      socket2.on('moveMade', (data) => {
+        resolve(data);
+      });
+    });
+
+    expect(player1Move.cellIndex).toBe(0);
+    expect(player1Move.player).toBe('X');
+    expect(player2Move.cellIndex).toBe(0);
+    expect(player2Move.player).toBe('X');
+
+    socket1.disconnect();
+    socket2.disconnect();
+  });
 });
