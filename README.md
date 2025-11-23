@@ -17,3 +17,18 @@
 - `npm run test:client` - Run client tests only
 - `npm run format` - Format code with Prettier
 - `npm run format:check` - Check code formatting with Prettier
+
+### Docker Workflow
+```bash
+# Start all services
+docker compose up
+
+# Rebuild after code changes
+docker compose build
+
+# Stop all services
+docker compose down
+
+# View logs
+docker compose logs -f server
+```
