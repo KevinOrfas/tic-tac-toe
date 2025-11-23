@@ -17,5 +17,10 @@ export default defineConfig({
         'src/test/',
       ],
     },
+    css: {
+      modules: {
+        classNameStrategy: 'non-scoped',
+      },
+    },
   },
 });

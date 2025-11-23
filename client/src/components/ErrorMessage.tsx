@@ -1,3 +1,5 @@
+import styles from './ErrorMessage.module.css';
+
 interface ErrorMessageProps {
   message: string;
   onDismiss: () => void;
@@ -5,27 +7,13 @@ interface ErrorMessageProps {
 
 export function ErrorMessage({ message, onDismiss }: ErrorMessageProps) {
   return (
-    <div
-      style={{
-        backgroundColor: '#fee',
-        border: '1px solid #f88',
-        borderRadius: '4px',
-        padding: '12px',
-        margin: '12px 0',
-        color: '#c33',
-      }}
-    >
-      <strong>Error:</strong> {message}
+    <div className={styles['error-message']}>
+      <span className={styles['error-message__text']}>
+        <strong>⚠️</strong> {message}
+      </span>
       <button
         onClick={onDismiss}
-        style={{
-          marginLeft: '8px',
-          background: 'transparent',
-          border: 'none',
-          color: '#c33',
-          cursor: 'pointer',
-          fontSize: '16px',
-        }}
+        className={styles['error-message__close-button']}
       >
         ×
       </button>

@@ -7,6 +7,7 @@ import {
 import { useSocket } from '../hooks/useSocket.ts';
 import type { GameResponse, ErrorResponse } from '@shared/types';
 import { ErrorMessage } from './ErrorMessage.tsx';
+import styles from './GameBoard.module.css';
 
 interface GameBoardProps {
   gameId: string;
@@ -75,43 +76,77 @@ export function GameBoard({ gameId }: GameBoardProps) {
     socket.emit('makeMove', { gameId, cellIndex: index });
   };
   return (
-    <div>
-      <h1>Game Board</h1>
+    <div className={styles['game-board']}>
+      <h1 className={styles['game-board__title']}>Tic-Tac-Toe</h1>
+
       {error && (
         <ErrorMessage message={error} onDismiss={() => setError(null)} />
       )}
 
-      {playerNumber && <p>You are Player {playerNumber}</p>}
-      {winner && <h2>Winner: {winner}</h2>}
-      {isDraw && <h2>Draw</h2>}
-      {!winner && !isDraw && <h2>Next player: {isXNext ? 'X' : 'O'}</h2>}
-      <div>
-        <h2>Game {gameId}</h2>
-        <div
-          data-testid="game-grid"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 100px)',
-            gap: '4px',
-          }}
-        >
-          {board.map((cell, index) => (
-            <button
-              key={index}
-              onClick={() => handleCellClick(index)}
-              style={{
-                width: '100px',
-                height: '100px',
-                fontSize: '24px',
-                border: '2px solid #ddd',
-                backgroundColor: '#fff',
-                color: cell === 'X' ? 'red' : 'blue',
-                cursor: 'pointer',
-              }}
-            >
-              {cell}
-            </button>
-          ))}
+      <div className={styles['game-board__layout']}>
+        <div className={styles['game-board__board-section']}>
+          <div className={styles['board-grid']} data-testid="game-grid">
+            {board.map((cell, index) => (
+              <button
+                key={index}
+                onClick={() => handleCellClick(index)}
+                className={`${styles['board-grid__cell']} ${
+                  cell === 'X'
+                    ? styles['board-grid__cell--x']
+                    : cell === 'O'
+                      ? styles['board-grid__cell--o']
+                      : ''
+                }`}
+              >
+                {cell}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles['game-board__info-section']}>
+          <div className={styles.card}>
+            <div className={styles['player-info']}>
+              <div className={styles['player-info__game-id-label']}>
+                Game ID
+              </div>
+              <div className={styles['player-info__game-id-value']}>
+                {gameId}
+              </div>
+              {playerNumber && (
+                <div
+                  className={`${styles['player-info__badge']} ${
+                    playerNumber === 1
+                      ? styles['player-info__badge--player-1']
+                      : styles['player-info__badge--player-2']
+                  }`}
+                >
+                  You are Player {playerNumber} ({playerNumber === 1 ? 'X' : 'O'}
+                  )
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.card}>
+            <div className={styles['game-status']}>
+              {winner && (
+                <span className={styles['game-status__text--winner']}>
+                  🎉 Winner: {winner}
+                </span>
+              )}
+              {isDraw && (
+                <span className={styles['game-status__text--draw']}>
+                  🤝 Draw
+                </span>
+              )}
+              {!winner && !isDraw && (
+                <span className={styles['game-status__text--next']}>
+                  Next player: {isXNext ? 'X' : 'O'}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

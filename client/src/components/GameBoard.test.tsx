@@ -30,10 +30,8 @@ describe('GameBoard', () => {
     const grid = screen.getByTestId('game-grid');
     const cells = screen.getAllByRole('button');
     expect(cells).toHaveLength(9);
-    expect(grid).toHaveStyle({
-      display: 'grid',
-      gridTemplateColumns: 'repeat(3, 100px)',
-    });
+    expect(grid).toBeInTheDocument();
+    expect(grid.className).toContain('board-grid');
   });
 
   it('should emit makeMove when cell is clicked', async () => {
