@@ -31,6 +31,16 @@ export async function createGame(
   return result.rows[0];
 }
 
+export async function getGameById(gameId: string): Promise<GameRecord | null> {
+  const result = await query<GameRecord>(
+    `SELECT id, player1_name, player2_name, winner, moves, created_at, completed_at, game_name, time_spent
+     FROM games
+     WHERE id = $1`,
+    [gameId]
+  );
+  return result.rows[0] || null;
+}
+
 export async function getAllGames(): Promise<GameRecord[]> {
   const result = await query<GameRecord>(
     `SELECT id, player1_name, player2_name, winner, moves, created_at, completed_at, game_name, time_spent

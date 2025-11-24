@@ -1,6 +1,6 @@
 import http from 'node:http';
 import crypto from 'node:crypto';
-import {createGame, getAllGames} from '../operations/index.js';
+import {createGame, getAllGames, getGameById} from '../operations/index.js';
 
 export async function handleGamesRoute(
   _req: http.IncomingMessage,
@@ -15,6 +15,40 @@ export async function handleGamesRoute(
   }));
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify(formattedGames));
+}
+
+export async function handleGetGameRoute(
+  req: http.IncomingMessage,
+  res: http.ServerResponse
+) {
+  const gameId = req.url?.split('/').pop();
+
+  if (!gameId) {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Game ID required' }));
+    return;
+  }
+
+  const game = await getGameById(gameId);
+
+  if (!game) {
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Game not found' }));
+    return;
+  }
+
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(
+    JSON.stringify({
+      id: game.id,
+      gameName: game.game_name || '',
+      winner: game.winner || '',
+      timeSpent: game.time_spent || '',
+      player1Name: game.player1_name,
+      player2Name: game.player2_name,
+      moves: game.moves,
+    })
+  );
 }
 
 export async function handleCreateGameRoute(

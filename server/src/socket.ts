@@ -7,6 +7,7 @@ import type {
   JoinGameData,
   MakeMoveData,
 } from '@shared/types.js';
+import { createGame } from './operations/index.js';
 
 const gameRooms = new Map<string, GameRoom>();
 
@@ -19,8 +20,11 @@ export function setupSocketServer(httpServer: http.Server): SocketIOServer {
   });
 
   io.on('connection', (socket) => {
-    socket.on('createGame', ({ playerName }: CreateGameData) => {
+    socket.on('createGame', async ({ playerName }: CreateGameData) => {
       const gameId = randomUUID();
+
+      await createGame(gameId, playerName, `Game by ${playerName}`);
+
       gameRooms.set(gameId, {
         id: gameId,
         players: [{ socketId: socket.id, playerName, playerNumber: 1 }],

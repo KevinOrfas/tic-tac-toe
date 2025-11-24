@@ -1,3 +1,3 @@
-import { createGame, getAllGames } from './gameRepository.js';
+import { createGame, getAllGames, getGameById } from './gameRepository.js';
 
-export { createGame, getAllGames };
+export { createGame, getAllGames, getGameById };

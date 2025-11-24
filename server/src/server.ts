@@ -1,5 +1,9 @@
 import http from 'node:http';
-import { handleCreateGameRoute, handleGamesRoute } from './routes/index.js';
+import {
+  handleCreateGameRoute,
+  handleGamesRoute,
+  handleGetGameRoute,
+} from './routes/index.js';
 
 export function createServer(): http.Server {
   return http.createServer((req, res) => {
@@ -24,6 +28,11 @@ export function createServer(): http.Server {
 
     if (req.method === 'GET' && req.url === '/api/v1/games') {
       handleGamesRoute(req, res);
+      return;
+    }
+
+    if (req.method === 'GET' && req.url?.startsWith('/api/v1/games/')) {
+      handleGetGameRoute(req, res);
       return;
     }
 

@@ -35,33 +35,12 @@ function HomePage() {
     };
   }, [socket, setLocation]);
 
-  const createGame = async () => {
-    try {
-      const response = await fetch('/api/v1/games', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ gameName: 'Test Gamee' }),
-      });
-      if (response.ok) {
-        return await response.json();
-      }
-    } catch (error) {
-      console.error('Fetch error:', error);
-    }
-  };
-
   const startGame = async () => {
     if (socket) {
       if (!socket.connected) {
         socket.connect();
       }
       socket.emit('createGame', { playerName: 'Player 1' });
-      const game = await createGame();
-      if (game?.id) {
-        setLocation(`/game/${game.id}`);
-      }
     }
   };
 
