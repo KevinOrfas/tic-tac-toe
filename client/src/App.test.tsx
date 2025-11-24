@@ -67,7 +67,7 @@ describe('App', () => {
     vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
-        id: '123',
+        id: '89aea61e-573f-4ba1-97cd-c66b7f2a74bc',
         gameName: 'New Game',
         winner: '',
         timeSpent: '',

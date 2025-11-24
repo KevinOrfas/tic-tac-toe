@@ -37,7 +37,7 @@ function HomePage() {
 
   const createGame = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/v1/games', {
+      const response = await fetch('/api/v1/games', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -58,12 +58,15 @@ function HomePage() {
         socket.connect();
       }
       socket.emit('createGame', { playerName: 'Player 1' });
-      await createGame();
+      const game = await createGame();
+      if (game?.id) {
+        setLocation(`/game/${game.id}`);
+      }
     }
   };
 
   const getGames = async () => {
-    const response = await fetch('http://localhost:3000/api/v1/games');
+    const response = await fetch('/api/v1/games');
     if (response.ok) {
       return await response.json();
     }
