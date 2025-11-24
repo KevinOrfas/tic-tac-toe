@@ -82,11 +82,28 @@ docker-compose.yml orchestrates:
 - Learning curve for Docker newcomers: Mitigated by docker-compose simplicity
 
 ## Implementation
-```
+
+### Development vs Production Configurations
+
+**Development** (`docker-compose.dev.yml`):
+- Volume mounts for hot reload (`./server:/app`, `./client:/app`)
+- Runs dev servers (`npm run dev`, `vite --host 0.0.0.0`)
+- Anonymous volumes for `node_modules` to prevent host/container conflicts
+- Direct TypeScript execution with tsx/Vite (no build step)
+- Client on port 5173, server on port 3000
+
+**Production** (`docker-compose.yml`):
+- Multi-stage Docker builds for optimised images
+- Compiled TypeScript → JavaScript
+- React built into static files served by nginx
+- Only production dependencies installed (`npm ci --omit=dev`)
+- Client on port 80 (nginx), server on port 3000
+
 ### Port Mapping
-- `5433:5432` - PostgreSQL (5433 to avoid conflicts with local installs)
+- `5433:5432` - PostgreSQL (5433 to avoid conflicts with local installations)
 - `3000:3000` - Server API
-- `80:80` - Client (nginx)
+- `5173:5173` - Client development server (dev only)
+- `80:80` - Client nginx (production only)
 
 ### Environment Variables
 Server receives database connection via docker-compose environment:
@@ -99,7 +116,26 @@ DB_PORT: 5432           # Internal port
 Database data persists across container restarts:
 ```yaml
 volumes:
-  postgres_data:
+  postgres_data:        # Production
+  postgres_dev_data:    # Development
+```
+
+### Development Workflow
+```bash
+# Start with hot reload
+docker compose -f docker-compose.dev.yml up
+
+# Changes to ./server/src or ./client/src automatically sync
+# Dev servers (tsx watch, Vite) detect changes and reload
+```
+
+### Production Workflow
+```bash
+# Build optimised images and start
+docker compose up --build
+
+# Client served as static files via nginx
+# Server runs compiled JavaScript from /dist
 ```
 
 ## Date

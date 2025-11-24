@@ -1,0 +1,75 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tictactoe-postgres-dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tictactoe
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tictactoe-network
+
+  server:
+    build:
+      context: .
+      dockerfile: ./server/Dockerfile
+      target: development
+    container_name: tictactoe-server-dev
+    working_dir: /app
+    environment:
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: tictactoe
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./server:/app
+      - ./shared:/shared
+      - /app/node_modules
+    command: npm run dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tictactoe-network
+
+  client:
+    build:
+      context: .
+      dockerfile: ./client/Dockerfile
+      target: development
+    container_name: tictactoe-client-dev
+    working_dir: /app
+    environment:
+      NODE_ENV: development
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app
+      - ./shared:/shared
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+    depends_on:
+      - server
+    networks:
+      - tictactoe-network
+
+volumes:
+  postgres_dev_data:
+
+networks:
+  tictactoe-network:
+    driver: bridge

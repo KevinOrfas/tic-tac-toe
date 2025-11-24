@@ -19,16 +19,58 @@
 - `npm run format:check` - Check code formatting with Prettier
 
 ### Docker Workflow
-```bash
-# Start all services
-docker compose up
 
-# Rebuild after code changes
-docker compose build
+#### Development Mode (with hot reload)
+```bash
+# Start all services with hot reload
+docker compose -f docker-compose.dev.yml up
+
+# Run in background
+docker compose -f docker-compose.dev.yml up -d
+
+# Stop services
+docker compose -f docker-compose.dev.yml down
+
+# View logs
+docker compose -f docker-compose.dev.yml logs -f
+```
+
+Access the application:
+- Client: http://localhost:5173 (Vite dev server)
+- Server: http://localhost:3000
+- PostgreSQL: localhost:5433
+
+#### Production Mode (optimised builds)
+```bash
+# Build and start all services
+docker compose up --build
+
+# Run in background
+docker compose up -d
 
 # Stop all services
 docker compose down
 
 # View logs
 docker compose logs -f server
+```
+
+Access the application:
+- Client: http://localhost:80 (nginx)
+- Server: http://localhost:3000
+- PostgreSQL: localhost:5433
+
+#### Common Docker Commands
+```bash
+# Build images without starting
+docker compose build
+
+# Restart a specific service
+docker compose restart server
+
+# View running containers
+docker compose ps
+
+# Remove containers and volumes
+docker compose down -v
 ```
