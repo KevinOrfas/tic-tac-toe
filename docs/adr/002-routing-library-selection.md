@@ -1,4 +1,4 @@
-# ADR 001: Routing Library Selection
+# ADR 002: Routing Library Selection
 
 ## Status
 Accepted
@@ -45,7 +45,7 @@ Three routing libraries were evaluated:
 If the application scales to 5+ routes or requires complex data loading, migration to TanStack Router would provide better type safety and DX.
 
 ## Implementation
-```typescript
+```
 / - Game list (HomePage)
 /game/:id - Game board (GameBoard)
 ```

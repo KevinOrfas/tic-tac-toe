@@ -36,5 +36,5 @@
     "skipLibCheck": true
   },
   "include": ["src/**/*", "../shared/**/*"],
-  "exclude": ["node_modules", "dist", "__tests__", "**/*.test.ts", "**/test/**"]
+  "exclude": ["node_modules", "dist", "__tests__"]
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import http from 'node:http';
+import { Server } from 'node:http';
 import { Server as SocketIOServer } from 'socket.io';
 import { io as ioClient, Socket as ClientSocket } from 'socket.io-client';
 import { createServer } from './server.js';
@@ -13,7 +13,7 @@ import {
 } from './test/socketTestHelpers.js';
 
 describe('Socket.io Server', () => {
-  let httpServer: http.Server;
+  let httpServer: Server;
   let io: SocketIOServer;
   let serverUrl: string;
   let clientSocket: ClientSocket;

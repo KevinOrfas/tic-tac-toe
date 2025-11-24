@@ -1,16 +1,21 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import http from 'node:http';
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { Server } from 'node:http';
 import { Game } from './types.js';
 import { startTestServer, stopTestServer } from './test/testHelpers.js';
+import { pool } from './db.js';
 const { createServer } = await import('./server.js');
 
 describe('HTTP Server', () => {
-  let httpServer: http.Server;
+  let httpServer: Server;
   let baseUrl: string;
 
   beforeAll(async () => {
     httpServer = createServer();
     baseUrl = await startTestServer(httpServer);
+  });
+
+  beforeEach(async () => {
+    await pool.query('DELETE FROM games');
   });
 
   afterAll(async () => {
@@ -25,7 +30,7 @@ describe('HTTP Server', () => {
     expect(data).toHaveProperty('status', 'ok');
   });
 
-  it.skip('should return empty array when no games exist', async () => {
+  it('should return empty array when no games exist', async () => {
     const response = await fetch(`${baseUrl}/api/v1/games`);
     expect(response.status).toBe(200);
 
@@ -34,21 +39,28 @@ describe('HTTP Server', () => {
   });
 
   it('should return list of games with winners', async () => {
+    await fetch(`${baseUrl}/api/v1/games`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gameName: 'Sal' }),
+    });
+    await fetch(`${baseUrl}/api/v1/games`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gameName: 'Santiago' }),
+    });
+
     const response = await fetch(`${baseUrl}/api/v1/games`);
     expect(response.status).toBe(200);
 
     const data: Game[] = (await response.json()) as Game[];
     expect(Array.isArray(data)).toBe(true);
+    expect(data.length).toBe(2);
 
-    if (data.length > 0) {
-      const game = data[0];
-      expect(game).toHaveProperty('id');
-      expect(game).toHaveProperty('winner');
-      expect(data).toEqual([
-        { id: '1', winner: 'Player 1', timeSpent: '', gameName: 'Sal' },
-        { id: '2', winner: 'Player 2', timeSpent: '', gameName: 'Santiago' },
-      ]);
-    }
+    const game = data[0];
+    expect(game).toHaveProperty('id');
+    expect(game).toHaveProperty('winner');
+    expect(game).toHaveProperty('gameName');
   });
 
   describe('POST /api/v1/games', () => {

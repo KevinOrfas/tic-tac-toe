@@ -1,6 +1,6 @@
-import http from 'node:http';
+import { Server } from 'node:http';
 
-export async function startTestServer(server: http.Server): Promise<string> {
+export async function startTestServer(server: Server): Promise<string> {
   return new Promise<string>((resolve) => {
     server.listen(0, () => {
       const address = server.address();
@@ -11,7 +11,7 @@ export async function startTestServer(server: http.Server): Promise<string> {
   });
 }
 
-export async function stopTestServer(server: http.Server): Promise<void> {
+export async function stopTestServer(server: Server): Promise<void> {
   return new Promise<void>((resolve) => {
     server.close(() => resolve());
   });
