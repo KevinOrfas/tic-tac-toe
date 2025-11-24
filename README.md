@@ -8,9 +8,36 @@
 - **Finish**: When the game ends, show the winner and redirect both players back to the main page.
 - **Auto-update**: The main page should update automatically with the new result.
 
+## Quick Start (Recommended for Development)
+
+**Prerequisites**: Docker installed and running
+
+1. **Start PostgreSQL database**:
+   ```bash
+   docker compose -f docker-compose.dev.yml up postgres -d
+   ```
+
+2. **Run database migrations**:
+   ```bash
+   PGPASSWORD=postgres psql -h localhost -p 5433 -U postgres -d tictactoe -f server/migrations/001_create_games_table.sql
+   PGPASSWORD=postgres psql -h localhost -p 5433 -U postgres -d tictactoe -f server/migrations/002_add_game_metadata.sql
+   ```
+
+3. **Start development servers** (from project root):
+   ```bash
+   npm run dev
+   ```
+   This starts both client (port 5173) and server (port 3000) with hot reload.
+
+4. **Open in browser**:
+   - Main app: http://localhost:5173
+   - Server API: http://localhost:3000/api/v1/health
+
+**Note**: Open the app in two separate browser windows/tabs to test multiplayer functionality.
+
 ## Available Scripts
 
-- `npm run dev` - Start both client and server in development mode concurrently
+- `npm run dev` - Start both client and server in development mode concurrently (requires PostgreSQL running)
 - `npm run build` - Build both server and client for production
 - `npm test` - Run tests for both server and client
 - `npm run test:server` - Run server tests only
@@ -41,6 +68,9 @@ Access the application:
 - PostgreSQL: localhost:5433
 
 #### Production Mode (optimised builds)
+
+**Note**: Production Docker build is currently a work in progress and may require additional configuration.
+
 ```bash
 # Build and start all services
 docker compose up --build
