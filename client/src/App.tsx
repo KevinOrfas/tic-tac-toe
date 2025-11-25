@@ -9,6 +9,7 @@ import { useSocket } from './hooks/useSocket.ts';
 function HomePage() {
   const [, setLocation] = useLocation();
   const [games, setGames] = useState<ResponseShape[]>([]);
+  const [nickname, setNickname] = useState('');
   const socket = useSocket();
 
   useEffect(() => {
@@ -54,16 +55,26 @@ function HomePage() {
       if (!socket.connected) {
         socket.connect();
       }
-      socket.emit('createGame', { playerName: 'Player 1' });
+      const playerName = nickname.trim() || 'Player 1';
+      socket.emit('createGame', { playerName });
     }
   };
 
   return (
     <>
       <h1>Multiplayer Tic-Tac-Toe</h1>
-      <button type="button" onClick={startGame}>
-        New Game
-      </button>
+      <div>
+        <input
+          type="text"
+          placeholder="Enter your nickname (optional)"
+          value={nickname}
+          onChange={(e) => setNickname(e.target.value)}
+          style={{ padding: '8px', marginRight: '10px' }}
+        />
+        <button type="button" onClick={startGame}>
+          New Game
+        </button>
+      </div>
       <GamesList gamesResult={games} />
     </>
   );
