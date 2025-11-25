@@ -8,9 +8,7 @@ import { useSocket } from './hooks/useSocket.ts';
 
 function HomePage() {
   const [, setLocation] = useLocation();
-  const [games, setGames] = useState<ResponseShape[]>([
-    { id: '', winner: '', gameName: '', timeSpent: '' },
-  ]);
+  const [games, setGames] = useState<ResponseShape[]>([]);
   const socket = useSocket();
 
   useEffect(() => {

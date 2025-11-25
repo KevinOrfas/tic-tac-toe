@@ -77,6 +77,19 @@ describe('App', () => {
     const button = screen.getByRole('button', { name: /New Game/i });
     await user.click(button);
 
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        id: '89aea61e-573f-4ba1-97cd-c66b7f2a74bc',
+        gameName: 'New Game',
+        winner: null,
+        moves: [],
+        player1Name: 'Player 1',
+        player2Name: null,
+        timeSpent: '',
+      }),
+    } as Response);
+
     await waitFor(() => {
       expect(window.location.pathname).toMatch(/^\/game\/[a-f0-9-]{36}$/);
     });
