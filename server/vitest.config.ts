@@ -7,6 +7,7 @@ export default defineConfig({
     setupFiles: ['./src/test/setupTests.ts'],
     include: ['src/**/*.test.ts'],
     exclude: ['node_modules', 'dist'],
+    fileParallelism: false,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

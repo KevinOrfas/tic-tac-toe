@@ -7,7 +7,12 @@ import type {
   JoinGameData,
   MakeMoveData,
 } from '@shared/types.js';
-import { createGame } from './operations/index.js';
+import {
+  createGame,
+  updatePlayer2,
+  addMove,
+  completeGame,
+} from './operations/index.js';
 
 const gameRooms = new Map<string, GameRoom>();
 
@@ -34,7 +39,7 @@ export function setupSocketServer(httpServer: http.Server): SocketIOServer {
       socket.emit('gameCreated', { gameId, playerNumber: 1 });
     });
 
-    socket.on('joinGame', ({ gameId, playerName }: JoinGameData) => {
+    socket.on('joinGame', async ({ gameId, playerName }: JoinGameData) => {
       const gameRoom = gameRooms.get(gameId);
 
       if (!gameRoom) {
@@ -65,9 +70,12 @@ export function setupSocketServer(httpServer: http.Server): SocketIOServer {
       });
       socket.join(gameId);
       socket.emit('gameJoined', { gameId, playerNumber: 2 });
+      io.to(gameId).emit('bothPlayersJoined');
+
+      await updatePlayer2(gameId, playerName);
     });
 
-    socket.on('makeMove', ({ gameId, cellIndex }: MakeMoveData) => {
+    socket.on('makeMove', async ({ gameId, cellIndex }: MakeMoveData) => {
       const gameRoom = gameRooms.get(gameId);
 
       if (!gameRoom) {
@@ -92,8 +100,29 @@ export function setupSocketServer(httpServer: http.Server): SocketIOServer {
       const player = movingPlayer.playerNumber === 1 ? 'X' : 'O';
       gameRoom.currentTurn = gameRoom.currentTurn === 1 ? 2 : 1;
 
+      await addMove(gameId, { cellIndex, player });
+
       io.to(gameId).emit('moveMade', { cellIndex, player });
     });
+
+    socket.on(
+      'gameEnded',
+      async ({
+        gameId,
+        winner,
+        isDraw,
+      }: {
+        gameId: string;
+        winner: 'X' | 'O' | null;
+        isDraw: boolean;
+      }) => {
+        const finalWinner = isDraw ? 'D' : winner;
+        if (finalWinner) {
+          await completeGame(gameId, finalWinner);
+          io.to(gameId).emit('gameOver');
+        }
+      }
+    );
 
     socket.on('disconnect', () => {
       for (const [gameId, gameRoom] of gameRooms.entries()) {

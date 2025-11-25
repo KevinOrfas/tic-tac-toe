@@ -3,6 +3,7 @@ import { Server } from 'node:http';
 import { Game } from './types.js';
 import { startTestServer, stopTestServer } from './test/testHelpers.js';
 import { pool } from './db.js';
+import { completeGame } from './operations/index.js';
 const { createServer } = await import('./server.js');
 
 describe('HTTP Server', () => {
@@ -39,16 +40,22 @@ describe('HTTP Server', () => {
   });
 
   it('should return list of games with winners', async () => {
-    await fetch(`${baseUrl}/api/v1/games`, {
+    const response1 = await fetch(`${baseUrl}/api/v1/games`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ gameName: 'Sal' }),
     });
-    await fetch(`${baseUrl}/api/v1/games`, {
+    const game1 = (await response1.json()) as Game;
+
+    const response2 = await fetch(`${baseUrl}/api/v1/games`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ gameName: 'Santiago' }),
     });
+    const game2 = (await response2.json()) as Game;
+
+    await completeGame(game1?.id, 'X');
+    await completeGame(game2?.id, 'O');
 
     const response = await fetch(`${baseUrl}/api/v1/games`);
     expect(response.status).toBe(200);

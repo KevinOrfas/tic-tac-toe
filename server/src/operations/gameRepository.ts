@@ -45,7 +45,50 @@ export async function getAllGames(): Promise<GameRecord[]> {
   const result = await query<GameRecord>(
     `SELECT id, player1_name, player2_name, winner, moves, created_at, completed_at, game_name, time_spent
      FROM games
+     WHERE winner IS NOT NULL
      ORDER BY created_at DESC`
   );
   return result.rows;
+}
+
+export async function updatePlayer2(
+  gameId: string,
+  player2Name: string
+): Promise<GameRecord | undefined> {
+  const result = await query<GameRecord>(
+    `UPDATE games
+     SET player2_name = $1
+     WHERE id = $2
+     RETURNING id, player1_name, player2_name, winner, moves, created_at, completed_at, game_name, time_spent`,
+    [player2Name, gameId]
+  );
+  return result.rows[0];
+}
+
+export async function addMove(
+  gameId: string,
+  move: GameMove
+): Promise<GameRecord | undefined> {
+  const result = await query<GameRecord>(
+    `UPDATE games
+     SET moves = moves || $1::jsonb
+     WHERE id = $2
+     RETURNING id, player1_name, player2_name, winner, moves, created_at, completed_at, game_name, time_spent`,
+    [JSON.stringify([move]), gameId]
+  );
+  return result.rows[0];
+}
+
+export async function completeGame(
+  gameId: string,
+  winner: 'X' | 'O' | 'D'
+): Promise<GameRecord | undefined> {
+  const result = await query<GameRecord>(
+    `UPDATE games
+     SET winner = $1, completed_at = NOW()
+     WHERE id = $2
+     RETURNING id, player1_name, player2_name, winner, moves, created_at, completed_at, game_name, time_spent`,
+    [winner, gameId]
+  );
+  return result.rows[0];
 }
