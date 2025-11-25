@@ -12,6 +12,14 @@ function HomePage() {
   const socket = useSocket();
 
   useEffect(() => {
+    const fetchGames = async () => {
+      const response = await fetch('/api/v1/games');
+      if (response.ok) {
+        const games = await response.json();
+        setGames(games);
+      }
+    };
+
     const handleConnect = () => {
       console.log('Connected to server');
     };
@@ -24,12 +32,20 @@ function HomePage() {
       setLocation(`/game/${data.gameId}`);
     };
 
+    const handleGameOver = async () => {
+      await fetchGames();
+    };
+
     socket.on('connect', handleConnect);
     socket.on('gameCreated', handleGameCreated);
+    socket.on('gameOver', handleGameOver);
+
+    fetchGames();
 
     return () => {
       socket.off('connect', handleConnect);
       socket.off('gameCreated', handleGameCreated);
+      socket.off('gameOver', handleGameOver);
     };
   }, [socket, setLocation]);
 
@@ -41,23 +57,6 @@ function HomePage() {
       socket.emit('createGame', { playerName: 'Player 1' });
     }
   };
-
-  const getGames = async () => {
-    const response = await fetch('/api/v1/games');
-    if (response.ok) {
-      return await response.json();
-    }
-  };
-
-  useEffect(() => {
-    const fetchGames = async () => {
-      const games = await getGames();
-      if (games) {
-        setGames(games);
-      }
-    };
-    fetchGames();
-  }, []);
 
   return (
     <>
