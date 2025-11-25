@@ -24,6 +24,7 @@ export function GameBoard({ gameId }: GameBoardProps) {
   const [playerNumber, setPlayerNumber] = useState<number | null>(null);
   const [bothPlayersJoined, setBothPlayersJoined] = useState(false);
   const [isViewOnly, setIsViewOnly] = useState(false);
+  const [isCheckingViewMode, setIsCheckingViewMode] = useState(true);
   const [gameName, setGameName] = useState<string>('');
 
   const winner = calculateWinner(board);
@@ -42,20 +43,18 @@ export function GameBoard({ gameId }: GameBoardProps) {
             setGameName(gameData.gameName || '');
 
             const newBoard = createEmptyBoard();
-            gameData.moves?.forEach((move: { cellIndex: number; player: 'X' | 'O' }) => {
-              newBoard[move.cellIndex] = move.player;
-            });
+            gameData.moves?.forEach(
+              (move: { cellIndex: number; player: 'X' | 'O' }) => {
+                newBoard[move.cellIndex] = move.player;
+              }
+            );
             setBoard(newBoard);
-
-            const xMoves = gameData.moves?.filter((m: { player: string }) => m.player === 'X').length || 0;
-            const oMoves = gameData.moves?.filter((m: { player: string }) => m.player === 'O').length || 0;
-            setIsXNext(xMoves === oMoves);
-
-            return;
           }
         }
       } catch (err) {
         console.error('Failed to fetch game data:', err);
+      } finally {
+        setIsCheckingViewMode(false);
       }
     };
 
@@ -63,7 +62,7 @@ export function GameBoard({ gameId }: GameBoardProps) {
   }, [gameId]);
 
   useEffect(() => {
-    if (isViewOnly) {
+    if (isCheckingViewMode || isViewOnly) {
       return;
     }
 
@@ -133,7 +132,7 @@ export function GameBoard({ gameId }: GameBoardProps) {
       socket.off('playerDisconnected', handlePlayerDisconnected);
       socket.off('gameOver', handleGameOver);
     };
-  }, [socket, gameId, setLocation, isViewOnly]);
+  }, [socket, gameId, setLocation, isViewOnly, isCheckingViewMode]);
 
   useEffect(() => {
     if (winner || isDraw) {
@@ -182,7 +181,9 @@ export function GameBoard({ gameId }: GameBoardProps) {
                       ? styles['board-grid__cell--o']
                       : ''
                 }`}
-                style={isViewOnly ? { cursor: 'not-allowed', opacity: 0.8 } : {}}
+                style={
+                  isViewOnly ? { cursor: 'not-allowed', opacity: 0.8 } : {}
+                }
               >
                 {cell}
               </button>
@@ -201,7 +202,13 @@ export function GameBoard({ gameId }: GameBoardProps) {
                   <div className={styles['player-info__game-id-value']}>
                     {gameId}
                   </div>
-                  <div style={{ marginTop: '8px', color: '#888', fontSize: '14px' }}>
+                  <div
+                    style={{
+                      marginTop: '8px',
+                      color: '#888',
+                      fontSize: '14px',
+                    }}
+                  >
                     View Only Mode
                   </div>
                 </>
@@ -238,9 +245,7 @@ export function GameBoard({ gameId }: GameBoardProps) {
                 </span>
               )}
               {isViewOnly && isDraw && (
-                <span className={styles['game-status__text--draw']}>
-                  Draw
-                </span>
+                <span className={styles['game-status__text--draw']}>Draw</span>
               )}
               {!isViewOnly && !bothPlayersJoined && (
                 <span className={styles['game-status__text--next']}>
