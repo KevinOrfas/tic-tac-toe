@@ -22,6 +22,13 @@ describe('GameBoard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(SocketContext, 'useSocket').mockReturnValue(mockSocket);
+
+    globalThis.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ moves: [], winner: null }),
+      })
+    ) as any;
   });
 
   it('renders a 3x3 grid of cells', () => {
@@ -36,6 +43,15 @@ describe('GameBoard', () => {
 
   it('should emit makeMove when cell is clicked', async () => {
     renderWithSocket(<GameBoard gameId="123" />);
+
+    const [, bothPlayersJoinedHandler] = mockOn.mock.calls.find(
+      (call) => call[0] === 'bothPlayersJoined'
+    )!;
+
+    act(() => {
+      bothPlayersJoinedHandler();
+    });
+
     const [cell] = screen.getAllByRole('button');
     await userEvent.click(cell);
 
@@ -142,9 +158,17 @@ describe('GameBoard', () => {
 
   it('should show "Draw" only when board is full with no winner', () => {
     renderWithSocket(<GameBoard gameId="123" />);
+
+    const [, bothPlayersJoinedHandler] = mockOn.mock.calls.find(
+      (call) => call[0] === 'bothPlayersJoined'
+    )!;
     const [, moveMadeHandler] = mockOn.mock.calls.find(
       (call) => call[0] === 'moveMade'
     )!;
+
+    act(() => {
+      bothPlayersJoinedHandler();
+    });
 
     act(() => {
       moveMadeHandler({ cellIndex: 0, player: 'X' });
