@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import App from './App';
@@ -109,9 +109,11 @@ describe('App', () => {
       }),
     } as Response);
 
-    gameCreatedHandler({
-      gameId: '89aea61e-573f-4ba1-97cd-c66b7f2a74bc',
-      playerNumber: 1,
+    act(() => {
+      gameCreatedHandler({
+        gameId: '89aea61e-573f-4ba1-97cd-c66b7f2a74bc',
+        playerNumber: 1,
+      });
     });
 
     await waitFor(() => {
