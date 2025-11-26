@@ -5,11 +5,13 @@ import { Route, useLocation } from 'wouter';
 import { GameBoard } from './components/GameBoard.tsx';
 import { SocketProvider } from './context/SocketContext.tsx';
 import { useSocket } from './hooks/useSocket.ts';
+import styles from './components/OnlineUsers.module.css';
 
 function HomePage() {
   const [, setLocation] = useLocation();
   const [games, setGames] = useState<ResponseShape[]>([]);
   const [nickname, setNickname] = useState('');
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const socket = useSocket();
 
   useEffect(() => {
@@ -37,9 +39,14 @@ function HomePage() {
       await fetchGames();
     };
 
+    const handleOnlineUsers = (users: string[]) => {
+      setOnlineUsers(users);
+    };
+
     socket.on('connect', handleConnect);
     socket.on('gameCreated', handleGameCreated);
     socket.on('gameOver', handleGameOver);
+    socket.on('onlineUsers', handleOnlineUsers);
 
     fetchGames();
 
@@ -47,6 +54,7 @@ function HomePage() {
       socket.off('connect', handleConnect);
       socket.off('gameCreated', handleGameCreated);
       socket.off('gameOver', handleGameOver);
+      socket.off('onlineUsers', handleOnlineUsers);
     };
   }, [socket, setLocation]);
 
@@ -75,6 +83,22 @@ function HomePage() {
           New Game
         </button>
       </div>
+      <div className={styles['online-users']}>
+        <h3 className={styles['online-users__title']}>
+          Online Users ({onlineUsers.length})
+        </h3>
+        <ul className={styles['online-users__list']}>
+          {onlineUsers.map((user, index) => (
+            <li
+              key={`${user}-${index}`}
+              className={styles['online-users__item']}
+            >
+              🟢 {user}
+            </li>
+          ))}
+        </ul>
+      </div>
+
       <GamesList gamesResult={games} />
     </>
   );

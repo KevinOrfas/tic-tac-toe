@@ -15,6 +15,7 @@ import {
 } from './operations/index.js';
 
 const gameRooms = new Map<string, GameRoom>();
+const onlineUsers = new Map<string, { socketId: string; nickname: string }>();
 
 export function setupSocketServer(httpServer: http.Server): SocketIOServer {
   const io = new SocketIOServer(httpServer, {
@@ -25,10 +26,17 @@ export function setupSocketServer(httpServer: http.Server): SocketIOServer {
   });
 
   io.on('connection', (socket) => {
+    const userList = Array.from(onlineUsers.values()).map((u) => u.nickname);
+    socket.emit('onlineUsers', userList);
+
     socket.on('createGame', async ({ playerName }: CreateGameData) => {
       const gameId = randomUUID();
 
       await createGame(gameId, playerName, `Game by ${playerName}`);
+
+      onlineUsers.set(socket.id, { socketId: socket.id, nickname: playerName });
+      const userList = Array.from(onlineUsers.values()).map((u) => u.nickname);
+      io.emit('onlineUsers', userList);
 
       gameRooms.set(gameId, {
         id: gameId,
@@ -40,6 +48,10 @@ export function setupSocketServer(httpServer: http.Server): SocketIOServer {
     });
 
     socket.on('joinGame', async ({ gameId, playerName }: JoinGameData) => {
+      onlineUsers.set(socket.id, { socketId: socket.id, nickname: playerName });
+      const userList = Array.from(onlineUsers.values()).map((u) => u.nickname);
+      io.emit('onlineUsers', userList);
+
       const gameRoom = gameRooms.get(gameId);
 
       if (!gameRoom) {
@@ -74,6 +86,40 @@ export function setupSocketServer(httpServer: http.Server): SocketIOServer {
 
       await updatePlayer2(gameId, playerName);
     });
+
+    socket.on(
+      'updateNickname',
+      async ({
+        gameId,
+        playerName,
+      }: {
+        gameId: string;
+        playerName: string;
+      }) => {
+        const gameRoom = gameRooms.get(gameId);
+        if (!gameRoom) {
+          return;
+        }
+
+        const player = gameRoom.players.find((p) => p.socketId === socket.id);
+        if (player) {
+          player.playerName = playerName;
+
+          if (player.playerNumber === 2) {
+            await updatePlayer2(gameId, playerName);
+          }
+
+          onlineUsers.set(socket.id, {
+            socketId: socket.id,
+            nickname: playerName,
+          });
+          const userList = Array.from(onlineUsers.values()).map(
+            (u) => u.nickname
+          );
+          io.emit('onlineUsers', userList);
+        }
+      }
+    );
 
     socket.on('makeMove', async ({ gameId, cellIndex }: MakeMoveData) => {
       const gameRoom = gameRooms.get(gameId);
@@ -125,6 +171,11 @@ export function setupSocketServer(httpServer: http.Server): SocketIOServer {
     );
 
     socket.on('disconnect', () => {
+      // Remove user from online users list
+      onlineUsers.delete(socket.id);
+      const userList = Array.from(onlineUsers.values()).map((u) => u.nickname);
+      io.emit('onlineUsers', userList);
+
       for (const [gameId, gameRoom] of gameRooms.entries()) {
         const disconnectedPlayer = gameRoom.players.find(
           (p) => p.socketId === socket.id

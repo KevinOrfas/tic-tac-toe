@@ -26,6 +26,7 @@ export function GameBoard({ gameId }: GameBoardProps) {
   const [isViewOnly, setIsViewOnly] = useState(false);
   const [isCheckingViewMode, setIsCheckingViewMode] = useState(true);
   const [gameName, setGameName] = useState<string>('');
+  const [nickName, setNickName] = useState<string>('');
 
   const winner = calculateWinner(board);
   const isBoardFull = board.every((cell) => cell !== null);
@@ -156,6 +157,16 @@ export function GameBoard({ gameId }: GameBoardProps) {
 
     socket.emit('makeMove', { gameId, cellIndex: index });
   };
+
+  const handleNicknameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newNickname = e.target.value;
+    setNickName(newNickname);
+
+    if (playerNumber === 2) {
+      const playerName = newNickname.trim() || 'Player 2';
+      socket.emit('updateNickname', { gameId, playerName });
+    }
+  };
   return (
     <div className={styles['game-board']}>
       <h1 className={styles['game-board__title']}>
@@ -221,16 +232,33 @@ export function GameBoard({ gameId }: GameBoardProps) {
                     {gameId}
                   </div>
                   {playerNumber && (
-                    <div
-                      className={`${styles['player-info__badge']} ${
-                        playerNumber === 1
-                          ? styles['player-info__badge--player-1']
-                          : styles['player-info__badge--player-2']
-                      }`}
-                    >
-                      You are Player {playerNumber} (
-                      {playerNumber === 1 ? 'X' : 'O'})
-                    </div>
+                    <>
+                      <div
+                        className={`${styles['player-info__badge']} ${
+                          playerNumber === 1
+                            ? styles['player-info__badge--player-1']
+                            : styles['player-info__badge--player-2']
+                        }`}
+                      >
+                        You are Player {playerNumber} (
+                        {playerNumber === 1 ? 'X' : 'O'})
+                      </div>
+                      {playerNumber === 2 && (
+                        <div style={{ marginTop: '10px' }}>
+                          <input
+                            type="text"
+                            placeholder="Enter your nickname"
+                            value={nickName}
+                            onChange={handleNicknameChange}
+                            style={{
+                              padding: '5px',
+                              fontSize: '14px',
+                              width: '100%',
+                            }}
+                          />
+                        </div>
+                      )}
+                    </>
                   )}
                 </>
               )}
