@@ -113,6 +113,11 @@
   border-color: #999;
 }
 
+.board-grid__cell:focus {
+    background-color: #111;
+    border-color: #999;
+}
+
 .board-grid__cell--x {
   color: #c62828;
 }

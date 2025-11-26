@@ -1,4 +1,4 @@
-import { screen, act } from '@testing-library/react';
+import { screen, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GameBoard } from './GameBoard.tsx';
 import userEvent from '@testing-library/user-event';
@@ -44,6 +44,10 @@ describe('GameBoard', () => {
   it('should emit makeMove when cell is clicked', async () => {
     renderWithSocket(<GameBoard gameId="123" />);
 
+    await waitFor(() => {
+      expect(mockOn).toHaveBeenCalledWith('bothPlayersJoined', expect.any(Function));
+    });
+
     const [, bothPlayersJoinedHandler] = mockOn.mock.calls.find(
       (call) => call[0] === 'bothPlayersJoined'
     )!;
@@ -61,10 +65,13 @@ describe('GameBoard', () => {
     });
   });
 
-  it('should register socket event listeners on mount', () => {
+  it('should register socket event listeners on mount', async () => {
     renderWithSocket(<GameBoard gameId="123" />);
 
-    expect(mockOn).toHaveBeenCalledWith('gameJoined', expect.any(Function));
+    await waitFor(() => {
+      expect(mockOn).toHaveBeenCalledWith('gameJoined', expect.any(Function));
+    });
+
     expect(mockOn).toHaveBeenCalledWith('error', expect.any(Function));
     expect(mockOn).toHaveBeenCalledWith('connect', expect.any(Function));
     expect(mockOn).toHaveBeenCalledWith('moveMade', expect.any(Function));
@@ -74,19 +81,25 @@ describe('GameBoard', () => {
     );
   });
 
-  it('should emit joinGame when socket is already connected', () => {
+  it('should emit joinGame when socket is already connected', async () => {
     renderWithSocket(<GameBoard gameId="123" />);
 
-    expect(mockEmit).toHaveBeenCalledWith('joinGame', {
-      gameId: '123',
-      playerName: 'Player 2',
+    await waitFor(() => {
+      expect(mockEmit).toHaveBeenCalledWith('joinGame', {
+        gameId: '123',
+        playerName: 'Player 2',
+      });
     });
   });
 
-  it('should update board when moveMade event is received', () => {
+  it('should update board when moveMade event is received', async () => {
     renderWithSocket(<GameBoard gameId="123" />);
-    const cells = screen.getAllByRole('button');
 
+    await waitFor(() => {
+      expect(mockOn).toHaveBeenCalledWith('moveMade', expect.any(Function));
+    });
+
+    const cells = screen.getAllByRole('button');
     const [, moveMadeHandler] = mockOn.mock.calls.find(
       (call) => call[0] === 'moveMade'
     )!;
@@ -98,10 +111,14 @@ describe('GameBoard', () => {
     expect(cells[0]).toHaveTextContent('X');
   });
 
-  it('should update board with O when second move is made', () => {
+  it('should update board with O when second move is made', async () => {
     renderWithSocket(<GameBoard gameId="123" />);
-    const cells = screen.getAllByRole('button');
 
+    await waitFor(() => {
+      expect(mockOn).toHaveBeenCalledWith('moveMade', expect.any(Function));
+    });
+
+    const cells = screen.getAllByRole('button');
     const [, moveMadeHandler] = mockOn.mock.calls.find(
       (call) => call[0] === 'moveMade'
     )!;
@@ -117,8 +134,12 @@ describe('GameBoard', () => {
     expect(cells[1]).toHaveTextContent('O');
   });
 
-  it('should clear error when moveMade event is received', () => {
+  it('should clear error when moveMade event is received', async () => {
     renderWithSocket(<GameBoard gameId="123" />);
+
+    await waitFor(() => {
+      expect(mockOn).toHaveBeenCalledWith('error', expect.any(Function));
+    });
 
     const [, errorHandler] = mockOn.mock.calls.find(
       (call) => call[0] === 'error'
@@ -156,8 +177,12 @@ describe('GameBoard', () => {
     expect(cells[5]).toHaveTextContent('');
   });
 
-  it('should show "Draw" only when board is full with no winner', () => {
+  it('should show "Draw" only when board is full with no winner', async () => {
     renderWithSocket(<GameBoard gameId="123" />);
+
+    await waitFor(() => {
+      expect(mockOn).toHaveBeenCalledWith('bothPlayersJoined', expect.any(Function));
+    });
 
     const [, bothPlayersJoinedHandler] = mockOn.mock.calls.find(
       (call) => call[0] === 'bothPlayersJoined'
@@ -187,8 +212,12 @@ describe('GameBoard', () => {
     expect(screen.queryByText(/Next player/i)).not.toBeInTheDocument();
   });
 
-  it('should display error message when a player disconnects', () => {
+  it('should display error message when a player disconnects', async () => {
     renderWithSocket(<GameBoard gameId="123" />);
+
+    await waitFor(() => {
+      expect(mockOn).toHaveBeenCalledWith('playerDisconnected', expect.any(Function));
+    });
 
     const [, playerDisconnectedHandler] = mockOn.mock.calls.find(
       (call) => call[0] === 'playerDisconnected'
